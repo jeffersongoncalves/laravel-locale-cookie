@@ -53,3 +53,23 @@ it('respects a custom cookie name from config', function () {
 
     expect(handleWithCookies(['lang' => 'es']))->toBe('es');
 });
+
+it('respects a client-set unencrypted cookie by reading the raw cookie bag', function () {
+    // A cookie set on the client (e.g. by JavaScript) is not encrypted. Reading it
+    // via $request->cookies->get() bypasses EncryptCookies, so the raw value is
+    // honoured instead of silently failing to decrypt and resolving to null.
+    config()->set('locale-cookie.cookie', 'locale');
+    config()->set('locale-cookie.supported', ['en', 'pt_BR']);
+    config()->set('locale-cookie.fallback', 'en');
+
+    expect(handleWithCookies(['locale' => 'pt_BR']))->toBe('pt_BR');
+});
+
+it('falls back to en when neither package nor app fallback is configured', function () {
+    config()->set('locale-cookie.cookie', 'locale');
+    config()->set('locale-cookie.supported', ['en']);
+    config()->set('locale-cookie.fallback', null);
+    config()->set('app.fallback_locale', null);
+
+    expect(handleWithCookies())->toBe('en');
+});

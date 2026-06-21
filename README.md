@@ -53,6 +53,14 @@ Route::middleware(SetLocale::class)->group(function () {
 });
 ```
 
+For convenience, the package also registers a `locale` middleware alias, so you can reference it by name:
+
+```php
+Route::middleware('locale')->group(function () {
+    // ...locale-aware routes
+});
+```
+
 You can also alias it in `bootstrap/app.php`:
 
 ```php
@@ -61,6 +69,33 @@ You can also alias it in `bootstrap/app.php`:
         \JeffersonGoncalves\LocaleCookie\Middleware\SetLocale::class,
     ]);
 })
+```
+
+### Setting the cookie
+
+This package only **reads** the locale cookie — it never writes it. Your application is responsible for setting the cookie when the visitor chooses a locale. You can do that from PHP:
+
+```php
+return redirect()->back()->withCookie(cookie()->forever('locale', 'pt_BR'));
+```
+
+…or from the client with JavaScript:
+
+```js
+document.cookie = 'locale=pt_BR; path=/; max-age=31536000';
+```
+
+### Encrypted cookies
+
+By default Laravel's `EncryptCookies` middleware encrypts every cookie, and it runs **before** this middleware. To make sure the value is read correctly — and so that **client-set** cookies (e.g. the JavaScript example above, which are never encrypted) keep working — this package reads the raw cookie value via `$request->cookies->get()`, bypassing decryption.
+
+If you would rather have Laravel manage the cookie as an encrypted value set from the server, exclude it from encryption instead by adding the cookie name to the `EncryptCookies` `$except` array:
+
+```php
+// app/Http/Middleware/EncryptCookies.php
+protected $except = [
+    'locale',
+];
 ```
 
 ### Using with Livewire

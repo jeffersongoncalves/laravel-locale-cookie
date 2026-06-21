@@ -13,9 +13,12 @@ class SetLocale
     {
         $cookieName = config('locale-cookie.cookie', 'locale');
         $supported = config('locale-cookie.supported', ['en']);
-        $fallback = config('locale-cookie.fallback') ?? config('app.fallback_locale');
+        $fallback = config('locale-cookie.fallback') ?? config('app.fallback_locale') ?? 'en';
 
-        $locale = $request->cookie($cookieName);
+        // Read the raw cookie value via the Symfony bag so it bypasses Laravel's
+        // EncryptCookies middleware. This keeps client-set (e.g. JavaScript) cookies
+        // working, which would otherwise fail to decrypt and silently resolve to null.
+        $locale = $request->cookies->get($cookieName);
 
         if (! is_string($locale) || ! in_array($locale, $supported, true)) {
             $locale = $fallback;
