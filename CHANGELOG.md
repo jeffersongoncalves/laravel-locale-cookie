@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-locale-cookie` will be documented in this file.
 
+## v1.2.0 - 2026-06-21
+
+Add a config-driven locale switch route + SwitchLocaleController (`locale-cookie.switch`).
+
 ## v1.1.0 - 2026-06-21
 
 **Full Changelog**: https://github.com/jeffersongoncalves/laravel-locale-cookie/compare/v1.0.1...v1.1.0
