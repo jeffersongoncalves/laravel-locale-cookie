@@ -39,4 +39,28 @@ return [
 
     'fallback' => null,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Locale Switch Route
+    |--------------------------------------------------------------------------
+    |
+    | A ready-made route that persists the chosen locale in the cookie and
+    | redirects back to a same-host Referer (open-redirect safe). Point your
+    | language switcher at route(name, ['locale' => $code]). The `{locale}`
+    | param is constrained to the `supported` list above.
+    |
+    */
+
+    'switch' => [
+        'enabled' => true,
+        'path' => 'locale/{locale}',
+        'name' => 'locale.switch',
+        // Cookie lifetime in minutes (default: 1 year).
+        'lifetime' => 60 * 24 * 365,
+        // Middleware applied to the switch route. `web` is included so the
+        // queued cookie is attached + encrypted the same way the SetLocale
+        // middleware reads it; add your own (e.g. a security-headers one).
+        'middleware' => ['web'],
+    ],
+
 ];

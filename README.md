@@ -112,6 +112,28 @@ Livewire::addPersistentMiddleware([
 ]);
 ```
 
+### Locale switch route
+
+The package registers a ready-made route that persists the chosen locale in the cookie and redirects back to a same-host Referer (open-redirect safe). Point your language switcher at it:
+
+```blade
+@foreach (config('locale-cookie.supported') as $code)
+    <a href="{{ route('locale.switch', ['locale' => $code]) }}">{{ strtoupper($code) }}</a>
+@endforeach
+```
+
+The `{locale}` param is constrained to `config('locale-cookie.supported')`. Configure (or disable) it under `locale-cookie.switch`:
+
+```php
+'switch' => [
+    'enabled' => true,
+    'path' => 'locale/{locale}',
+    'name' => 'locale.switch',
+    'lifetime' => 60 * 24 * 365, // cookie lifetime in minutes
+    'middleware' => ['web'],     // `web` keeps the cookie encrypted like SetLocale reads it
+],
+```
+
 ## Testing
 
 ```bash
