@@ -58,8 +58,10 @@ return [
         // Cookie lifetime in minutes (default: 1 year).
         'lifetime' => 60 * 24 * 365,
         // Middleware applied to the switch route. `web` is included so the
-        // queued cookie is attached + encrypted the same way the SetLocale
-        // middleware reads it; add your own (e.g. a security-headers one).
+        // queued cookie is attached to the response (and the session/CSRF
+        // cookies behave normally). The locale cookie itself is excluded from
+        // EncryptCookies by the package, so it is written raw and read raw by
+        // the SetLocale middleware. Add your own here (e.g. security headers).
         'middleware' => ['web'],
     ],
 

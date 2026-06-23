@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Route;
 use JeffersonGoncalves\LocaleCookie\Middleware\SetLocale;
 
 function handleWithCookies(array $cookies = []): string
@@ -54,15 +55,19 @@ it('respects a custom cookie name from config', function () {
     expect(handleWithCookies(['lang' => 'es']))->toBe('es');
 });
 
-it('respects a client-set unencrypted cookie by reading the raw cookie bag', function () {
-    // A cookie set on the client (e.g. by JavaScript) is not encrypted. Reading it
-    // via $request->cookies->get() bypasses EncryptCookies, so the raw value is
-    // honoured instead of silently failing to decrypt and resolving to null.
-    config()->set('locale-cookie.cookie', 'locale');
-    config()->set('locale-cookie.supported', ['en', 'pt_BR']);
-    config()->set('locale-cookie.fallback', 'en');
+it('applies the locale over the HTTP stack via the registered `locale` middleware alias', function () {
+    // Exercises the real EncryptCookies -> SetLocale path: because the cookie
+    // is excluded from encryption, a raw client-set cookie survives the web
+    // group and the `locale` alias resolves it.
+    $this->envConfig = ['locale-cookie.supported' => ['en', 'pt_BR']];
+    $this->refreshApplication();
 
-    expect(handleWithCookies(['locale' => 'pt_BR']))->toBe('pt_BR');
+    Route::middleware(['web', 'locale'])->get('/lang', fn () => app()->getLocale());
+
+    $this->withUnencryptedCookie('locale', 'pt_BR')
+        ->get('/lang')
+        ->assertOk()
+        ->assertSee('pt_BR');
 });
 
 it('falls back to en when neither package nor app fallback is configured', function () {

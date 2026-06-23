@@ -87,16 +87,9 @@ document.cookie = 'locale=pt_BR; path=/; max-age=31536000';
 
 ### Encrypted cookies
 
-By default Laravel's `EncryptCookies` middleware encrypts every cookie, and it runs **before** this middleware. To make sure the value is read correctly — and so that **client-set** cookies (e.g. the JavaScript example above, which are never encrypted) keep working — this package reads the raw cookie value via `$request->cookies->get()`, bypassing decryption.
+By default Laravel's `EncryptCookies` middleware encrypts every cookie, and it runs **before** this middleware. To keep the read side (the `SetLocale` middleware, which reads the raw value via `$request->cookies->get()`) and the write side (the bundled switch route) consistent — and so that **client-set** cookies (e.g. the JavaScript example above, which are never encrypted) keep working — **the package automatically registers the configured cookie name in `EncryptCookies`' exception list** (via `EncryptCookies::except()`). The cookie is therefore always written and read as a plaintext value; you do not need to add it to `$except` yourself.
 
-If you would rather have Laravel manage the cookie as an encrypted value set from the server, exclude it from encryption instead by adding the cookie name to the `EncryptCookies` `$except` array:
-
-```php
-// app/Http/Middleware/EncryptCookies.php
-protected $except = [
-    'locale',
-];
-```
+If you change `locale-cookie.cookie`, the exclusion follows the new name automatically.
 
 ### Using with Livewire
 
@@ -130,8 +123,26 @@ The `{locale}` param is constrained to `config('locale-cookie.supported')`. Conf
     'path' => 'locale/{locale}',
     'name' => 'locale.switch',
     'lifetime' => 60 * 24 * 365, // cookie lifetime in minutes
-    'middleware' => ['web'],     // `web` keeps the cookie encrypted like SetLocale reads it
+    'middleware' => ['web'],     // attaches the queued cookie; the locale cookie is excluded from encryption
 ],
+```
+
+### Shortening a locale code
+
+The `LocaleCookie::short()` helper reduces a locale to its short language code — handy for `<html lang="…">`, flag icons, or any place you only need the base language:
+
+```php
+use JeffersonGoncalves\LocaleCookie\LocaleCookie;
+
+LocaleCookie::short('pt_BR'); // 'pt'
+LocaleCookie::short('pt-BR'); // 'pt'
+LocaleCookie::short('EN');    // 'en'
+LocaleCookie::short();        // current app locale, shortened
+LocaleCookie::short('');      // 'en' (fallback when there is no usable prefix)
+```
+
+```blade
+<html lang="{{ \JeffersonGoncalves\LocaleCookie\LocaleCookie::short() }}">
 ```
 
 ## Testing

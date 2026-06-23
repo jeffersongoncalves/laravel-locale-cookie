@@ -21,13 +21,21 @@ class SwitchLocaleController
         $supported = (array) config('locale-cookie.supported', []);
 
         if (! in_array($locale, $supported, true)) {
-            $locale = config('locale-cookie.fallback') ?? config('app.fallback_locale');
+            $locale = config('locale-cookie.fallback') ?? config('app.fallback_locale') ?? 'en';
         }
 
         Cookie::queue(
             (string) config('locale-cookie.cookie', 'locale'),
             $locale,
             (int) config('locale-cookie.switch.lifetime', 60 * 24 * 365),
+            '/',
+            null,
+            (bool) config('session.secure', false),
+            // Not HTTP-only: the locale cookie is meant to be readable/writable
+            // by client-side JavaScript (the SetLocale middleware reads it raw).
+            false,
+            false,
+            'lax',
         );
 
         return redirect($this->safeReferer($request));
