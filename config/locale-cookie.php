@@ -65,4 +65,33 @@ return [
         'middleware' => ['web'],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | URL-Prefix Locale Mode
+    |--------------------------------------------------------------------------
+    |
+    | Opt-in, backward compatible. When enabled, routes registered through
+    | `LocaleCookie::routes()` are registered twice: once unprefixed for the
+    | default locale (preserving existing indexed URLs), and once per locale
+    | listed in `segments` under a `/{segment}` prefix (e.g. `/fr/projects`).
+    | This makes every non-default locale crawlable at its own URL, which the
+    | cookie-only approach cannot do (bots never send a locale cookie).
+    |
+    */
+
+    'url_prefix' => [
+        'enabled' => env('LOCALE_COOKIE_URL_PREFIX', false),
+
+        // Falls back to `fallback` above when null.
+        'default_locale' => null,
+
+        // Only non-default locales need an entry — the default locale is
+        // never prefixed. Lets a locale code differ from its URL segment
+        // (e.g. `pt_BR` => `pt-br`).
+        'segments' => [
+            // 'en' => 'en',
+            // 'fr' => 'fr',
+        ],
+    ],
+
 ];

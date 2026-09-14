@@ -147,6 +147,50 @@ LocaleCookie::short('');      // 'en' (fallback when there is no usable prefix)
 <html lang="{{ \JeffersonGoncalves\LocaleCookie\LocaleCookie::short() }}">
 ```
 
+### URL-prefix mode (SEO / crawlable per-language URLs)
+
+Cookie-only locale resolution is a dead end for SEO: crawlers never send a locale cookie, so they only ever see your fallback locale — there is no distinct, crawlable URL for a French version of a page to exist at, so there's nothing to point `hreflang` at.
+
+Opt-in URL-prefix mode fixes that by giving every non-default locale a real path prefix (`/en/...`, `/fr/...`), while the default locale stays unprefixed at root (no mass redirect needed for your existing indexed URLs). Enable it in the config:
+
+```php
+'url_prefix' => [
+    'enabled' => env('LOCALE_COOKIE_URL_PREFIX', false),
+    'default_locale' => null, // falls back to `fallback` above when null
+    'segments' => [
+        'fr' => 'fr',
+        'de' => 'de',
+        'es' => 'es',
+    ],
+],
+```
+
+Wrap your route definitions in `LocaleCookie::routes()` instead of registering them directly. It registers each route once unprefixed for the default locale, and once more per configured segment — a Laravel route can't collapse a *leading* optional segment followed by more literal segments into both forms on its own, so this registers the group twice under the hood:
+
+```php
+use JeffersonGoncalves\LocaleCookie\LocaleCookie;
+
+LocaleCookie::routes(function () {
+    Route::middleware(['web', 'locale'])->get('projects', ProjectsController::class)->name('projects.show');
+});
+```
+
+This yields `projects.show` (`/projects`, default locale) plus `fr.projects.show` (`/fr/projects`) and `es.projects.show` (`/es/projects`). With `url_prefix.enabled`, the `locale`/`SetLocale` middleware resolves the locale from the matched route's prefix instead of the cookie — the same URL always renders the same locale for anyone, bots included — and still keeps the cookie in sync for code that reads it directly.
+
+Use `LocaleCookie::localizedRoute()` for a language switcher, so "this same page, in French" links to `/fr/projects` rather than swapping the cookie and reloading:
+
+```php
+LocaleCookie::localizedRoute('projects.show', [], 'fr'); // '.../fr/projects'
+```
+
+And `LocaleCookie::alternates()` to emit `hreflang` tags without reimplementing the locale-to-URL mapping yourself:
+
+```blade
+@foreach (\JeffersonGoncalves\LocaleCookie\LocaleCookie::alternates() as $locale => $url)
+    <link rel="alternate" hreflang="{{ $locale }}" href="{{ $url }}">
+@endforeach
+```
+
 ## Testing
 
 ```bash
