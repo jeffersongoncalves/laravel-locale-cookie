@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-locale-cookie` will be documented in this file.
 
+## v1.4.0 - 2026-09-14
+
+### What's Changed
+
+- feat: add opt-in URL-prefix locale mode for SEO (#6) — non-default locales get a real path prefix (`/fr/...`), default locale stays unprefixed at root. Adds `LocaleCookie::localizedRoute()`, `LocaleCookie::alternates()` for hreflang, and route-prefix resolution in `SetLocale` middleware.
+
+**Full Changelog**: https://github.com/jeffersongoncalves/laravel-locale-cookie/compare/v1.3.0...v1.4.0
+
 ## v1.3.0 - 2026-06-21
 
 Add `LocaleCookie::short()` locale → language-code helper.
