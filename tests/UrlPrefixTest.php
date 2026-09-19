@@ -118,3 +118,17 @@ it('falls back to the cookie when the {locale} route parameter is unsupported', 
         ->assertOk()
         ->assertSee('es');
 });
+
+it('fills route() with the cookie-fallback locale when the {locale} route parameter is unsupported', function () {
+    enableUrlPrefix();
+
+    Route::middleware(['web', 'locale'])
+        ->get('{locale}/greet', fn () => route('greet'))
+        ->where('locale', '.*')
+        ->name('greet');
+
+    $this->withUnencryptedCookie('locale', 'es')
+        ->get('/xx/greet')
+        ->assertOk()
+        ->assertSee(url('/es/greet'));
+});

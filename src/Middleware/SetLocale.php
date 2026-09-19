@@ -35,10 +35,6 @@ class SetLocale
 
         if (is_string($routeLocale) && in_array($routeLocale, $supported, true)) {
             $locale = $routeLocale;
-
-            // So `route()`/link generation picks up the URL-derived locale
-            // without it having to be passed explicitly at every call site.
-            URL::defaults(['locale' => $locale]);
         } else {
             // Read the raw cookie value via the Symfony bag so it bypasses Laravel's
             // EncryptCookies middleware. This keeps client-set (e.g. JavaScript) cookies
@@ -48,6 +44,14 @@ class SetLocale
             if (! is_string($locale) || ! in_array($locale, $supported, true)) {
                 $locale = $fallback;
             }
+        }
+
+        // So `route()`/link generation picks up the resolved locale without it
+        // having to be passed explicitly at every call site — even when the
+        // route's own `{locale}` segment was unsupported and we fell back to
+        // the cookie/fallback locale instead.
+        if ($urlPrefixEnabled) {
+            URL::defaults(['locale' => $locale]);
         }
 
         App::setLocale($locale);
