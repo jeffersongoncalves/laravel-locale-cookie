@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-locale-cookie` will be documented in this file.
 
+## v1.5.0 - 2026-09-19
+
+### What's Changed
+
+* feat: fall back to a dynamic {locale} route parameter in url-prefix mode by @jeffersongoncalves in https://github.com/jeffersongoncalves/laravel-locale-cookie/pull/8
+
+**Full Changelog**: https://github.com/jeffersongoncalves/laravel-locale-cookie/compare/v1.4.0...v1.5.0
+
 ## v1.4.0 - 2026-09-14
 
 ### What's Changed
