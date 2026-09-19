@@ -191,6 +191,18 @@ And `LocaleCookie::alternates()` to emit `hreflang` tags without reimplementing 
 @endforeach
 ```
 
+#### Bringing your own dynamic `{locale}` routing
+
+`LocaleCookie::routes()` isn't the only way to shape locale-prefixed routes — if your app registers every locale (default included) under a single dynamic group instead:
+
+```php
+Route::prefix('{locale}')->where('locale', 'en|fr|es')->group(function () {
+    Route::middleware(['web', 'locale'])->get('projects', ProjectsController::class)->name('projects.show');
+});
+```
+
+`SetLocale` still resolves it: with `url_prefix.enabled`, it checks the matched route's `locale` action first (for `LocaleCookie::routes()`'s groups), then falls back to a `{locale}` route parameter. Either source also fills `route()`/link generation with the resolved locale via `URL::defaults()`, so calls like `route('projects.show')` don't need `locale` passed explicitly.
+
 ## Testing
 
 ```bash
