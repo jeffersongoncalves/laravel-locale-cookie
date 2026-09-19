@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\Response;
 
 class SetLocale
@@ -22,9 +23,15 @@ class SetLocale
         // `LocaleCookie::routes()`'s groups) is authoritative: the same URL
         // must always render the same locale for anyone, bots included, so it
         // takes priority over the cookie rather than the other way round.
-        $routeLocale = (bool) config('locale-cookie.url_prefix.enabled', false)
-            ? $request->route()?->getAction('locale')
-            : null;
+        // Falls back to a `{locale}` route parameter for apps that register
+        // every locale under a single dynamic prefix group instead.
+        $urlPrefixEnabled = (bool) config('locale-cookie.url_prefix.enabled', false);
+
+        $routeLocale = $urlPrefixEnabled ? $request->route()?->getAction('locale') : null;
+
+        if ($urlPrefixEnabled && (! is_string($routeLocale) || ! in_array($routeLocale, $supported, true))) {
+            $routeLocale = $request->route('locale');
+        }
 
         if (is_string($routeLocale) && in_array($routeLocale, $supported, true)) {
             $locale = $routeLocale;
@@ -37,6 +44,14 @@ class SetLocale
             if (! is_string($locale) || ! in_array($locale, $supported, true)) {
                 $locale = $fallback;
             }
+        }
+
+        // So `route()`/link generation picks up the resolved locale without it
+        // having to be passed explicitly at every call site — even when the
+        // route's own `{locale}` segment was unsupported and we fell back to
+        // the cookie/fallback locale instead.
+        if ($urlPrefixEnabled) {
+            URL::defaults(['locale' => $locale]);
         }
 
         App::setLocale($locale);

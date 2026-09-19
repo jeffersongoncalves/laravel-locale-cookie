@@ -82,3 +82,53 @@ it('returns no alternates when url-prefix mode is disabled', function () {
 
     expect(LocaleCookie::alternates())->toBe([]);
 });
+
+it('resolves the locale from a dynamic {locale} route parameter', function () {
+    enableUrlPrefix();
+
+    Route::middleware(['web', 'locale'])
+        ->get('{locale}/greet', fn () => App::getLocale())
+        ->where('locale', 'en|fr|es')
+        ->name('greet');
+
+    $this->get('/fr/greet')->assertOk()->assertSee('fr');
+});
+
+it('fills route() calls with the {locale} route parameter via URL::defaults', function () {
+    enableUrlPrefix();
+
+    Route::middleware(['web', 'locale'])
+        ->get('{locale}/greet', fn () => route('greet'))
+        ->where('locale', 'en|fr|es')
+        ->name('greet');
+
+    $this->get('/fr/greet')->assertOk()->assertSee(url('/fr/greet'));
+});
+
+it('falls back to the cookie when the {locale} route parameter is unsupported', function () {
+    enableUrlPrefix();
+
+    Route::middleware(['web', 'locale'])
+        ->get('{locale}/greet', fn () => App::getLocale())
+        ->where('locale', '.*')
+        ->name('greet');
+
+    $this->withUnencryptedCookie('locale', 'es')
+        ->get('/xx/greet')
+        ->assertOk()
+        ->assertSee('es');
+});
+
+it('fills route() with the cookie-fallback locale when the {locale} route parameter is unsupported', function () {
+    enableUrlPrefix();
+
+    Route::middleware(['web', 'locale'])
+        ->get('{locale}/greet', fn () => route('greet'))
+        ->where('locale', '.*')
+        ->name('greet');
+
+    $this->withUnencryptedCookie('locale', 'es')
+        ->get('/xx/greet')
+        ->assertOk()
+        ->assertSee(url('/es/greet'));
+});
